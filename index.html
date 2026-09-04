@@ -26,4 +26,1851 @@
         .glass-panel {
             background: rgba(15, 23, 42, 0.82);
             backdrop-filter: blur(16px);
-       
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .menti-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .menti-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+        .bar-transition {
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .daily-double-animate {
+            animation: ddPulse 0.8s infinite alternate ease-in-out;
+        }
+        @keyframes ddPulse {
+            0% { transform: scale(0.98); box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+            100% { transform: scale(1.03); box-shadow: 0 0 45px rgba(245, 158, 11, 0.9); }
+        }
+        @media (max-width: 640px) {
+            .mobile-full-btn {
+                height: 105px !important;
+                font-size: 1.05rem !important;
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between">
+
+    <!-- Top Navigation / Presenter Bar -->
+    <header class="glass-panel sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between border-b border-indigo-900/50">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-500/30">
+                ⚡
+            </div>
+            <div>
+                <h1 class="text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-indigo-200 to-teal-300">
+                    SAGESURE TRIVIA LIVE
+                </h1>
+                <p class="text-xs text-indigo-300 font-semibold flex items-center gap-1.5">
+                    <span id="networkStatusDot" class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span id="networkStatusText">Cotality New User Training (LND-30688) • 15-Min Express</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Host Stats / Controls -->
+        <div id="hostHeaderStats" class="flex items-center gap-4">
+            <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-950/80 border border-indigo-800/60 text-xs">
+                <i class="fa-solid fa-users text-indigo-400"></i>
+                <span>Players Connected: <strong id="playerCountBadge" class="text-emerald-400 font-bold text-sm">0</strong></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleAudio()" id="audioToggleBtn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold border border-slate-700 text-slate-300">
+                    <i class="fa-solid fa-volume-high"></i> Sound
+                </button>
+                <button onclick="switchView('join')" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30">
+                    <i class="fa-solid fa-qrcode mr-1"></i> Join Code
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Application Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 flex flex-col justify-center items-center">
+
+        <!-- ================= VIEW 1: LOBBY / QR CODE JOIN SCREEN ================= -->
+        <section id="viewLobby" class="w-full max-w-4xl text-center flex flex-col items-center">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-900/40 border border-indigo-700/50 text-indigo-300 text-xs font-extrabold uppercase tracking-widest mb-4">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                SageSure Interactive Training Review
+            </div>
+            
+            <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white mb-2">
+                Join from your phone!
+            </h2>
+            <p class="text-slate-400 text-sm md:text-base max-w-lg mb-6">
+                Scan the QR code with your phone camera or enter the room code to vote live in real time.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl items-center">
+                <!-- QR Code Box -->
+                <div class="glass-panel p-6 rounded-3xl flex flex-col items-center shadow-2xl border border-indigo-500/20">
+                    <div id="qrcodeBox" class="p-3 bg-white rounded-2xl shadow-inner mb-4 flex items-center justify-center min-w-[190px] min-h-[190px]">
+                        <div class="text-xs text-slate-500 font-bold animate-pulse">Generating QR Code...</div>
+                    </div>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Direct Room Code</div>
+                    <div id="roomCodeDisplay" class="text-3xl font-black text-amber-400 tracking-wider font-mono">LOADING...</div>
+                </div>
+
+                <!-- Instructions & Player Roster -->
+                <div class="flex flex-col text-left gap-4">
+                    <div class="glass-card p-4 rounded-2xl">
+                        <div class="text-sm font-bold text-indigo-300 mb-1 flex items-center justify-between">
+                            <span class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-xs text-white">1</span>
+                                Scan QR or Open Join Link
+                            </span>
+                            <div class="flex gap-1.5">
+                                <button onclick="openPlayerTab()" class="text-[11px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2.5 py-1 rounded-md shadow">
+                                    <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Test Player Tab
+                                </button>
+                                <button onclick="copyJoinLink()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded-md border border-indigo-700/50 font-bold">
+                                    <i class="fa-regular fa-copy mr-1"></i> Copy Link
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-300 ml-8 break-all font-mono select-all bg-slate-900/80 p-2 rounded-lg border border-white/5 my-1" id="joinUrlText">Initializing link...</p>
+                    </div>
+
+                    <!-- Custom Hosted URL Override (if running locally via file://) -->
+                    <div id="localWarningBox" class="glass-card p-3 rounded-2xl border-amber-500/30 bg-amber-950/20 hidden">
+                        <div class="text-xs text-amber-300 font-bold mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Running Locally (file://)
+                        </div>
+                        <p class="text-[11px] text-slate-400 mb-2">
+                            For phones on other Wi-Fi networks to connect via QR, host this on GitHub Pages / Netlify or paste your hosted URL below:
+                        </p>
+                        <div class="flex gap-2">
+                            <input type="text" id="customUrlInput" placeholder="https://your-username.github.io/repo" class="flex-1 px-3 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-amber-400" />
+                            <button onclick="applyCustomUrl()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg">Update QR</button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-4 rounded-2xl">
+                        <div class="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-xs text-white">2</span>
+                            Pick your Nickname & Team
+                        </div>
+                        <p class="text-xs text-slate-400 ml-8">Answer questions quickly for bonus speed points!</p>
+                    </div>
+
+                    <!-- Live Joined Players Grid -->
+                    <div class="glass-card p-4 rounded-2xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Players in Lobby</span>
+                            <span id="lobbyPlayerCount" class="text-xs font-black text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800">0 Joined</span>
+                        </div>
+                        <div id="lobbyPlayerList" class="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
+                            <span class="text-xs text-slate-500 italic">Waiting for participants to join...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Host Start Game Button -->
+            <div class="mt-8 flex gap-4">
+                <button onclick="startGame()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-lg tracking-wide shadow-xl shadow-amber-500/25 menti-btn flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i> Start 15-Min Game
+                </button>
+                <button onclick="addBotPlayers()" class="px-4 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700">
+                    🤖 Add Demo Players
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 2: CONDENSED JEOPARDY CATEGORY BOARD ================= -->
+        <section id="viewBoard" class="w-full max-w-5xl hidden">
+            <div class="text-center mb-6">
+                <span class="text-xs font-bold text-amber-400 tracking-widest uppercase bg-amber-950/50 px-3 py-1 rounded-full border border-amber-800/50">
+                    SageSure Handbook Review • 1 Hidden Daily Double ⚡
+                </span>
+                <h2 class="text-3xl font-black text-white mt-2">Select a Question</h2>
+                <p class="text-xs text-slate-400">Condensed 3x3 Grid • 15-Minute Session</p>
+            </div>
+
+            <!-- 3 Concise Handbook Categories -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Category 1 -->
+                <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-indigo-500 flex flex-col gap-3">
+                    <div class="text-center py-2 bg-indigo-950/60 rounded-xl">
+                        <div class="text-xs font-extrabold text-indigo-400 uppercase tracking-widest">Category 1</div>
+                        <h3 class="font-extrabold text-white text-base">Workspace & Setup</h3>
+                    </div>
+                    <div class="flex flex-col gap-2.5" id="cat1Buttons"></div>
+                </div>
+
+                <!-- Category 2 -->
+                <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-amber-500 flex flex-col gap-3">
+                    <div class="text-center py-2 bg-amber-950/60 rounded-xl">
+                        <div class="text-xs font-extrabold text-amber-400 uppercase tracking-widest">Category 2</div>
+                        <h3 class="font-extrabold text-white text-base">Diagramming 101</h3>
+                    </div>
+                    <div class="flex flex-col gap-2.5" id="cat2Buttons"></div>
+                </div>
+
+                <!-- Category 3 -->
+                <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-teal-500 flex flex-col gap-3">
+                    <div class="text-center py-2 bg-teal-950/60 rounded-xl">
+                        <div class="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Category 3</div>
+                        <h3 class="font-extrabold text-white text-base">Estimating & Editing</h3>
+                    </div>
+                    <div class="flex flex-col gap-2.5" id="cat3Buttons"></div>
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="mt-8 flex justify-between items-center bg-slate-900/60 px-6 py-4 rounded-2xl border border-slate-800">
+                <div class="text-xs text-slate-400">
+                    Remaining Questions: <strong id="remainingCluesCount" class="text-amber-400 font-bold text-sm">9/9</strong>
+                </div>
+                <button onclick="startFinalJeopardy()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs tracking-wider shadow-lg shadow-purple-600/30 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-300"></i> Jump To Final Jeopardy
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 3: HOST LIVE QUESTION & MENTIMETER BAR CHART ================= -->
+        <section id="viewHostQuestion" class="w-full max-w-4xl hidden flex flex-col items-center">
+            
+            <!-- Daily Double Alert Splash Banner (If active) -->
+            <div id="hostDailyDoubleBanner" class="w-full p-4 mb-4 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-600 to-amber-500 border-2 border-amber-300 text-center text-slate-950 font-black text-lg tracking-wider uppercase daily-double-animate hidden shadow-2xl flex items-center justify-center gap-3">
+                <span>🔥</span>
+                <span>DAILY DOUBLE ACTIVATED! (2X POINTS)</span>
+                <span>🔥</span>
+            </div>
+
+            <!-- Category & Value Badge -->
+            <div class="flex items-center gap-3 mb-3">
+                <span id="hostCatBadge" class="px-3.5 py-1 rounded-full bg-indigo-900/60 border border-indigo-700 text-indigo-300 text-xs font-extrabold uppercase">
+                    Workspace & Setup
+                </span>
+                <span id="hostPointBadge" class="px-3.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-black">
+                    $100 Points
+                </span>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass-panel w-full p-6 md:p-8 rounded-3xl shadow-2xl border border-white/10 text-center mb-6">
+                <h3 id="hostQuestionText" class="text-xl md:text-2xl font-extrabold text-white leading-snug">
+                    Question text will appear here...
+                </h3>
+
+                <!-- Live Timer Bar -->
+                <div class="w-full bg-slate-800 h-2.5 rounded-full mt-6 overflow-hidden">
+                    <div id="hostTimerBar" class="bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 h-full w-full bar-transition"></div>
+                </div>
+                <div class="flex justify-between items-center mt-2 text-xs font-bold text-slate-400">
+                    <span>Time Left: <span id="hostTimerSecs" class="text-amber-400 font-mono text-sm">20</span>s</span>
+                    <span>Responses In: <span id="hostLiveVotesCount" class="text-emerald-400 font-bold text-sm">0</span>/<span id="hostTotalVotersCount" class="text-slate-300">0</span></span>
+                </div>
+            </div>
+
+            <!-- Mentimeter Animated Live Result Bars (Options A, B, C, D) -->
+            <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="hostOptionsContainer">
+                <!-- Dynamically populated -->
+            </div>
+
+            <!-- Host Control Actions -->
+            <div class="flex flex-wrap justify-center gap-3">
+                <button id="btnRevealAnswer" onclick="revealAnswer()" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm tracking-wide shadow-lg shadow-amber-500/20 flex items-center gap-2">
+                    <i class="fa-solid fa-eye"></i> Reveal Correct Answer & Points
+                </button>
+                <button id="btnShowLeaderboard" onclick="showLeaderboard()" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm tracking-wide shadow-lg shadow-indigo-600/20 hidden flex items-center gap-2">
+                    <i class="fa-solid fa-ranking-star text-amber-300"></i> View Live Leaderboard
+                </button>
+                <button id="btnBackToBoard" onclick="switchView('board')" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700">
+                    <i class="fa-solid fa-grid-2 mr-1"></i> Question Grid
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 4: LIVE LEADERBOARD ================= -->
+        <section id="viewLeaderboard" class="w-full max-w-3xl hidden flex flex-col items-center">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 text-2xl font-black mx-auto shadow-lg shadow-amber-500/30 mb-3">
+                    👑
+                </div>
+                <h2 class="text-3xl font-black text-white">SageSure Leaderboard</h2>
+                <p class="text-xs text-slate-400 mt-1">Real-time scores & speed bonuses</p>
+            </div>
+
+            <!-- Leaderboard Table -->
+            <div class="w-full glass-panel rounded-3xl p-5 shadow-2xl border border-white/10 mb-6 max-h-96 overflow-y-auto">
+                <div id="leaderboardList" class="flex flex-col gap-2.5">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="switchView('board')" class="px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm tracking-wide shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-right"></i> Next Question
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 5: FINAL JEOPARDY ================= -->
+        <section id="viewFinal" class="w-full max-w-3xl hidden flex flex-col items-center text-center">
+            
+            <!-- Final Stage 1: Wager Phase -->
+            <div id="finalJeopardyStage1" class="w-full">
+                <span class="text-xs font-black tracking-widest text-purple-400 bg-purple-950/60 px-4 py-1.5 rounded-full border border-purple-800">
+                    FINAL JEOPARDY • ALL OR NOTHING
+                </span>
+                <h2 class="text-3xl md:text-4xl font-black text-white mt-4 mb-2">Contents & Valuation Mastery</h2>
+                <p class="text-sm text-slate-300 max-w-lg mx-auto mb-6">
+                    Participants are entering their confidential wagers on their phones right now!
+                </p>
+
+                <div class="glass-panel p-6 rounded-3xl border border-purple-500/30 mb-6">
+                    <h3 class="text-xl font-bold text-amber-300 mb-2">Final Category: Coverage C (Personal Property)</h3>
+                    <p class="text-xs text-slate-400">Players can wager up to their entire accumulated score.</p>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl mb-6">
+                    <div class="text-xs font-bold text-slate-400 mb-2">Wagers Received:</div>
+                    <div id="hostWagerRoster" class="flex flex-wrap justify-center gap-2">
+                        <span class="text-xs text-slate-500 italic">Waiting for wagers...</span>
+                    </div>
+                </div>
+
+                <button onclick="revealFinalClue()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-base shadow-xl shadow-amber-500/30 menti-btn">
+                    Reveal Final Clue & Open Participant Typing (30s)
+                </button>
+            </div>
+
+            <!-- Final Stage 2: Clue & Live Submissions -->
+            <div id="finalJeopardyStage2" class="w-full hidden">
+                <div class="glass-panel p-8 rounded-3xl border border-amber-500/40 mb-6 text-center">
+                    <div class="text-xs font-black text-amber-400 uppercase tracking-widest mb-3">Final Clue</div>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-white leading-relaxed mb-6">
+                        "When evaluating personal property under Coverage C in Workspace, what specific term refers to the calculated settlement value obtained after subtracting physical depreciation from the full Replacement Cost Value (RCV)?"
+                    </h3>
+                    <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
+                        <div id="finalTimerBar" class="bg-gradient-to-r from-amber-400 to-rose-500 h-full w-full bar-transition"></div>
+                    </div>
+                    <div class="text-amber-400 font-mono font-black text-lg mt-2" id="finalTimerDisplay">30s</div>
+                </div>
+
+                <!-- Host Live Answers Table -->
+                <div class="glass-card p-5 rounded-3xl w-full text-left mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Live Participant Submissions</span>
+                        <span id="finalSubmissionsCount" class="text-xs font-black text-amber-400">0/0 Submitted</span>
+                    </div>
+                    <div id="finalHostSubmissionsList" class="flex flex-col gap-2 max-h-56 overflow-y-auto">
+                        <span class="text-xs text-slate-500 italic">Waiting for typed answers...</span>
+                    </div>
+                </div>
+
+                <button onclick="concludeGame()" class="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-base shadow-xl shadow-emerald-500/30 menti-btn">
+                    🏆 Reveal Correct Answer & Tally Final Scores!
+                </button>
+            </div>
+
+            <!-- Final Stage 3: Champion Podium & Breakdown -->
+            <div id="finalJeopardyStage3" class="w-full hidden">
+                <div class="text-5xl mb-2 animate-bounce">🏆</div>
+                <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-500">
+                    SAGESURE TOURNAMENT CHAMPION!
+                </h2>
+                <div class="mt-4 p-4 glass-card rounded-2xl border border-emerald-500/30 mb-6">
+                    <span class="text-xs font-bold text-slate-400 uppercase">Correct Response</span>
+                    <p class="text-xl font-black text-emerald-400">What is "Actual Cash Value (ACV)"?</p>
+                </div>
+                <div id="winnerBanner" class="text-3xl font-black text-white mt-4 mb-6 glass-panel p-6 rounded-3xl border border-amber-400/50">
+                    --
+                </div>
+
+                <!-- Final Scoreboard Summary -->
+                <div class="w-full glass-panel rounded-2xl p-4 mb-6 text-left">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">Final Standings & Grading</h4>
+                    <div id="finalGradingRoster" class="flex flex-col gap-2"></div>
+                </div>
+
+                <button onclick="resetWholeGame()" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700">
+                    🔄 Play Again / Reset
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= VIEW 6: MOBILE PARTICIPANT CLIENT VIEW ================= -->
+        <section id="viewParticipant" class="w-full max-w-md hidden flex flex-col items-center">
+            <!-- Mobile Join Form -->
+            <div id="mobileJoinCard" class="w-full glass-panel p-6 rounded-3xl border border-indigo-500/30 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-xl font-black mx-auto mb-3 shadow-lg shadow-indigo-600/40">
+                    📱
+                </div>
+                <h2 class="text-2xl font-black text-white mb-1">Enter The Game</h2>
+                <p class="text-xs text-slate-400 mb-6">SageSure New User Training (LND-30688)</p>
+
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="text-left block text-xs font-bold text-slate-300 mb-1">Room Code</label>
+                        <input type="text" id="participantRoomInput" placeholder="e.g. SAGE1234" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-amber-400 font-mono font-black uppercase outline-none focus:border-amber-400 text-center" />
+                    </div>
+                    <div>
+                        <label class="text-left block text-xs font-bold text-slate-300 mb-1">Your Name / Nickname</label>
+                        <input type="text" id="participantNameInput" placeholder="e.g. Jordan M." class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold outline-none focus:border-indigo-500" />
+                    </div>
+                    <div>
+                        <label class="text-left block text-xs font-bold text-slate-300 mb-1">Select Avatar / Team</label>
+                        <select id="participantAvatarSelect" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold outline-none focus:border-indigo-500">
+                            <option value="🛡️">🛡️ SageSure Guardians</option>
+                            <option value="⚡">⚡ Diagramming Pros</option>
+                            <option value="🎯">🎯 Estimate Wizards</option>
+                            <option value="🚀">🚀 Claims Accelerators</option>
+                        </select>
+                    </div>
+                    <button onclick="joinGameAsParticipant()" class="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-base shadow-lg shadow-amber-500/30 menti-btn mt-2">
+                        Join Game Now ➔
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Active Playing Screen -->
+            <div id="mobilePlayScreen" class="w-full hidden flex flex-col items-center">
+                
+                <!-- Mobile Daily Double Alert -->
+                <div id="mobileDailyDoubleBanner" class="w-full p-3 mb-3 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-600 border border-amber-300 text-center text-slate-950 font-black text-xs uppercase daily-double-animate hidden">
+                    🔥 DAILY DOUBLE! 2X POINTS! 🔥
+                </div>
+
+                <!-- Player Header -->
+                <div class="w-full glass-panel px-4 py-3 rounded-2xl flex justify-between items-center mb-4 border border-white/10">
+                    <div class="flex items-center gap-2">
+                        <span id="playerAvatarBadge" class="text-xl">🛡️</span>
+                        <span id="playerNameBadge" class="font-extrabold text-sm text-white">Player</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Points</span>
+                        <span id="playerScoreBadge" class="font-black text-emerald-400 text-base font-mono">$0</span>
+                    </div>
+                </div>
+
+                <!-- Waiting for Question State -->
+                <div id="playerWaitingBox" class="w-full glass-card p-8 rounded-3xl text-center border border-indigo-800/50 my-6">
+                    <div class="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <h3 class="text-lg font-black text-white mb-1">Look at the big screen!</h3>
+                    <p class="text-xs text-slate-400">Waiting for the host to launch the question...</p>
+                </div>
+
+                <!-- Regular 4-Buttons Grid -->
+                <div id="playerButtonsGrid" class="w-full grid grid-cols-2 gap-3.5 hidden my-2">
+                    <button onclick="submitVote(0)" class="mobile-full-btn h-28 rounded-2xl bg-indigo-600 active:scale-95 text-white font-black text-lg shadow-lg shadow-indigo-600/30 flex flex-col items-center justify-center p-3 border border-indigo-400/40">
+                        <span class="text-2xl mb-1">▲</span>
+                        <span id="btnLabel0" class="text-xs font-extrabold text-center">Option A</span>
+                    </button>
+                    <button onclick="submitVote(1)" class="mobile-full-btn h-28 rounded-2xl bg-amber-600 active:scale-95 text-slate-950 font-black text-lg shadow-lg shadow-amber-600/30 flex flex-col items-center justify-center p-3 border border-amber-400/40">
+                        <span class="text-2xl mb-1">◆</span>
+                        <span id="btnLabel1" class="text-xs font-extrabold text-center">Option B</span>
+                    </button>
+                    <button onclick="submitVote(2)" class="mobile-full-btn h-28 rounded-2xl bg-teal-600 active:scale-95 text-white font-black text-lg shadow-lg shadow-teal-600/30 flex flex-col items-center justify-center p-3 border border-teal-400/40">
+                        <span class="text-2xl mb-1">●</span>
+                        <span id="btnLabel2" class="text-xs font-extrabold text-center">Option C</span>
+                    </button>
+                    <button onclick="submitVote(3)" class="mobile-full-btn h-28 rounded-2xl bg-rose-600 active:scale-95 text-white font-black text-lg shadow-lg shadow-rose-600/30 flex flex-col items-center justify-center p-3 border border-rose-400/40">
+                        <span class="text-2xl mb-1">■</span>
+                        <span id="btnLabel3" class="text-xs font-extrabold text-center">Option D</span>
+                    </button>
+                </div>
+
+                <!-- ================= FINAL JEOPARDY MOBILE SCREENS ================= -->
+                
+                <!-- Stage A: Wager Input -->
+                <div id="playerFinalWagerBox" class="w-full glass-panel p-6 rounded-3xl text-center border border-purple-500/40 hidden my-4">
+                    <span class="text-xs font-black tracking-wider text-purple-400 uppercase bg-purple-950/60 px-3 py-1 rounded-full">Final Jeopardy</span>
+                    <h3 class="text-xl font-black text-white mt-3 mb-1">Enter Secret Wager</h3>
+                    <p class="text-xs text-slate-400 mb-4">Max wager: <strong id="playerMaxWagerText" class="text-amber-400 font-mono">$0</strong></p>
+                    
+                    <input type="number" id="playerWagerInput" min="0" placeholder="0" class="w-full px-4 py-3 text-center bg-slate-900 border border-slate-700 rounded-xl text-amber-400 font-black text-2xl outline-none focus:border-amber-400 mb-4" />
+                    <button onclick="submitFinalWager()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-sm shadow-lg shadow-purple-600/30 menti-btn">
+                        Lock In Wager 🔒
+                    </button>
+                </div>
+
+                <!-- Stage B: Text Answer Input -->
+                <div id="playerFinalAnswerBox" class="w-full glass-panel p-6 rounded-3xl text-center border border-amber-500/40 hidden my-4">
+                    <span class="text-xs font-black tracking-wider text-amber-400 uppercase bg-amber-950/60 px-3 py-1 rounded-full">Type Your Answer</span>
+                    <h3 class="text-lg font-black text-white mt-3 mb-2">Coverage C Valuation</h3>
+                    <p class="text-xs text-slate-400 mb-4">Type the exact or descriptive answer below:</p>
+
+                    <textarea id="playerFinalTextInput" rows="2" placeholder="e.g. What is Actual Cash Value (ACV)..." class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold text-sm outline-none focus:border-amber-400 mb-4"></textarea>
+                    
+                    <button onclick="submitFinalTextAnswer()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/30 menti-btn">
+                        Submit Final Answer ➔
+                    </button>
+                </div>
+
+                <!-- Final Participant Result / Grade Card -->
+                <div id="playerFinalResultCard" class="w-full glass-panel p-6 rounded-3xl text-center border border-white/10 hidden my-4">
+                    <div id="finalResultIcon" class="text-5xl mb-2">⏳</div>
+                    <h3 id="finalResultTitle" class="text-2xl font-black text-white mb-1">--</h3>
+                    <p id="finalResultSubtitle" class="text-xs text-slate-300 mb-4">--</p>
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-white/5">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Your Final Score</span>
+                        <span id="finalPlayerScoreTally" class="font-black text-2xl text-emerald-400 font-mono">$0</span>
+                    </div>
+                </div>
+
+                <!-- Standard Vote Feedback Screen -->
+                <div id="playerFeedbackBox" class="w-full glass-panel p-6 rounded-3xl text-center border border-white/10 hidden my-4">
+                    <div id="feedbackIcon" class="text-4xl mb-2">⏳</div>
+                    <h3 id="feedbackTitle" class="text-xl font-black text-white mb-1">Answer Submitted!</h3>
+                    <p id="feedbackDesc" class="text-xs text-slate-400">Waiting for results on host screen...</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-900">
+        SageSure Insurance • Cotality Learning & Development Interactive Platform
+    </footer>
+
+    <!-- ================= JAVASCRIPT GAME LOGIC & REAL-TIME PEERJS ================= -->
+    <script>
+        // Standalone Pure JS QR Code Generator (No External Dependencies)
+        var QRCode = (function() {
+            function QRPolynomial(num, shift) {
+                if (num.length === undefined) throw new Error(num.length + "/" + shift);
+                var offset = 0;
+                while (offset < num.length && num[offset] === 0) offset++;
+                this.num = new Array(num.length - offset + shift);
+                for (var i = 0; i < num.length - offset; i++) this.num[i] = num[offset + i];
+                for (var i = 0; i < shift; i++) this.num[this.num.length - shift + i] = 0;
+            }
+            QRPolynomial.prototype = {
+                get: function(index) { return this.num[index]; },
+                getLength: function() { return this.num.length; },
+                multiply: function(e) {
+                    var num = new Array(this.getLength() + e.getLength() - 1);
+                    for (var i = 0; i < this.getLength(); i++) {
+                        for (var j = 0; j < e.getLength(); j++) {
+                            num[i + j] ^= QRMath.gexp(QRMath.glog(this.get(i)) + QRMath.glog(e.get(j)));
+                        }
+                    }
+                    return new QRPolynomial(num, 0);
+                },
+                mod: function(e) {
+                    if (this.getLength() - e.getLength() < 0) return this;
+                    var ratio = QRMath.glog(this.get(0)) - QRMath.glog(e.get(0));
+                    var num = new Array(this.getLength());
+                    for (var i = 0; i < this.getLength(); i++) num[i] = this.get(i);
+                    for (var i = 0; i < e.getLength(); i++) {
+                        num[i] ^= QRMath.gexp(QRMath.glog(e.get(i)) + ratio);
+                    }
+                    return new QRPolynomial(num, 0).mod(e);
+                }
+            };
+
+            var QRMath = {
+                glog: function(n) {
+                    if (n < 1) throw new Error("glog(" + n + ")");
+                    return QRMath.LOG_TABLE[n];
+                },
+                gexp: function(n) {
+                    while (n < 0) n += 255;
+                    while (n >= 256) n -= 255;
+                    return QRMath.EXP_TABLE[n];
+                },
+                EXP_TABLE: new Array(256),
+                LOG_TABLE: new Array(256)
+            };
+            for (var i = 0; i < 8; i++) QRMath.EXP_TABLE[i] = 1 << i;
+            for (var i = 8; i < 256; i++) QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i - 4] ^ QRMath.EXP_TABLE[i - 5] ^ QRMath.EXP_TABLE[i - 6] ^ QRMath.EXP_TABLE[i - 8];
+            for (var i = 0; i < 255; i++) QRMath.LOG_TABLE[QRMath.EXP_TABLE[i]] = i;
+
+            var QRMode = { MODE_8BIT_BYTE: 4 };
+            var QRErrorCorrectLevel = { L: 1, M: 0, Q: 3, H: 2 };
+
+            function QRBitBuffer() {
+                this.buffer = [];
+                this.length = 0;
+            }
+            QRBitBuffer.prototype = {
+                get: function(index) {
+                    var bufIndex = Math.floor(index / 8);
+                    return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1) == 1;
+                },
+                put: function(num, length) {
+                    for (var i = 0; i < length; i++) {
+                        this.putBit(((num >>> (length - i - 1)) & 1) == 1);
+                    }
+                },
+                putBit: function(bit) {
+                    var bufIndex = Math.floor(this.length / 8);
+                    if (this.buffer.length <= bufIndex) this.buffer.push(0);
+                    if (bit) this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+                    this.length++;
+                }
+            };
+
+            var QRRSBlock = {
+                RS_BLOCK_TABLE: [
+                    [1, 26, 19], [1, 26, 16], [1, 26, 13], [1, 26, 9],
+                    [1, 44, 34], [1, 44, 28], [1, 44, 22], [1, 44, 16],
+                    [1, 70, 55], [1, 70, 44], [2, 35, 17], [2, 35, 13],
+                    [1, 100, 80], [2, 50, 32], [2, 50, 24], [4, 25, 9],
+                    [1, 134, 108], [2, 67, 43], [2, 33, 15, 2, 34, 16], [2, 33, 11, 2, 34, 12],
+                    [2, 86, 68], [4, 43, 27], [4, 43, 19], [4, 43, 15],
+                    [2, 98, 78], [4, 49, 31], [2, 32, 14, 4, 33, 15], [4, 39, 13, 1, 40, 14],
+                    [2, 121, 97], [2, 60, 38, 2, 61, 39], [4, 40, 18, 2, 41, 19], [4, 40, 14, 2, 41, 15],
+                    [2, 146, 116], [3, 58, 36, 2, 59, 37], [4, 36, 16, 4, 37, 17], [4, 36, 12, 4, 37, 13],
+                    [2, 86, 68, 2, 87, 69], [4, 69, 43, 1, 70, 44], [6, 43, 19, 2, 44, 20], [6, 43, 15, 2, 44, 16]
+                ],
+                getRSBlocks: function(typeNumber, errorCorrectLevel) {
+                    var rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+                    if (rsBlock === undefined) throw new Error("bad rs block @ typeNumber:" + typeNumber + "/errorCorrectLevel:" + errorCorrectLevel);
+                    var length = rsBlock.length / 3;
+                    var list = [];
+                    for (var i = 0; i < length; i++) {
+                        var count = rsBlock[i * 3 + 0];
+                        var totalCount = rsBlock[i * 3 + 1];
+                        var dataCount = rsBlock[i * 3 + 2];
+                        for (var j = 0; j < count; j++) list.push({ totalCount: totalCount, dataCount: dataCount });
+                    }
+                    return list;
+                },
+                getRsBlockTable: function(typeNumber, errorCorrectLevel) {
+                    switch (errorCorrectLevel) {
+                        case QRErrorCorrectLevel.L: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+                        case QRErrorCorrectLevel.M: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+                        case QRErrorCorrectLevel.Q: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+                        case QRErrorCorrectLevel.H: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+                        default: return undefined;
+                    }
+                }
+            };
+
+            function QRCodeModel(typeNumber, errorCorrectLevel) {
+                this.typeNumber = typeNumber;
+                this.errorCorrectLevel = errorCorrectLevel;
+                this.modules = null;
+                this.moduleCount = 0;
+                this.dataCache = null;
+                this.dataList = [];
+            }
+
+            QRCodeModel.prototype = {
+                addData: function(data) {
+                    this.dataList.push({
+                        data: data,
+                        getLength: function() {
+                            return unescape(encodeURIComponent(data)).length;
+                        },
+                        write: function(buffer) {
+                            var str = unescape(encodeURIComponent(data));
+                            for (var i = 0; i < str.length; i++) buffer.put(str.charCodeAt(i), 8);
+                        }
+                    });
+                    this.dataCache = null;
+                },
+                isDark: function(row, col) {
+                    if (row < 0 || this.moduleCount <= row || col < 0 || this.moduleCount <= col) {
+                        throw new Error(row + "," + col);
+                    }
+                    return this.modules[row][col];
+                },
+                getModuleCount: function() { return this.moduleCount; },
+                make: function() {
+                    if (this.typeNumber < 1) {
+                        var typeNumber = 1;
+                        for (typeNumber = 1; typeNumber < 40; typeNumber++) {
+                            var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, this.errorCorrectLevel);
+                            var totalDataCount = 0;
+                            for (var i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+                            var totalBytes = 0;
+                            for (var i = 0; i < this.dataList.length; i++) totalBytes += this.dataList[i].getLength();
+                            if (totalBytes <= totalDataCount - 3) break;
+                        }
+                        this.typeNumber = typeNumber;
+                    }
+                    this.makeImpl(false, this.getBestMaskPattern());
+                },
+                makeImpl: function(test, maskPattern) {
+                    this.moduleCount = this.typeNumber * 4 + 17;
+                    this.modules = new Array(this.moduleCount);
+                    for (var row = 0; row < this.moduleCount; row++) {
+                        this.modules[row] = new Array(this.moduleCount);
+                        for (var col = 0; col < this.moduleCount; col++) this.modules[row][col] = null;
+                    }
+                    this.setupPositionProbePattern(0, 0);
+                    this.setupPositionProbePattern(this.moduleCount - 7, 0);
+                    this.setupPositionProbePattern(0, this.moduleCount - 7);
+                    this.setupPositionAdjustPattern();
+                    this.setupTimingPattern();
+                    this.setupTypeInfo(test, maskPattern);
+                    if (this.typeNumber >= 7) this.setupTypeNumber(test);
+                    if (this.dataCache == null) this.dataCache = QRCodeModel.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+                    this.mapData(this.dataCache, maskPattern);
+                },
+                setupPositionProbePattern: function(row, col) {
+                    for (var r = -1; r <= 7; r++) {
+                        if (row + r <= -1 || this.moduleCount <= row + r) continue;
+                        for (var c = -1; c <= 7; c++) {
+                            if (col + c <= -1 || this.moduleCount <= col + c) continue;
+                            if ((0 <= r && r <= 6 && (c == 0 || c == 6)) || (0 <= c && c <= 6 && (r == 0 || r == 6)) || (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
+                                this.modules[row + r][col + c] = true;
+                            } else {
+                                this.modules[row + r][col + c] = false;
+                            }
+                        }
+                    }
+                },
+                getBestMaskPattern: function() { return 0; },
+                setupTimingPattern: function() {
+                    for (var r = 8; r < this.moduleCount - 8; r++) {
+                        if (this.modules[r][6] !== null) continue;
+                        this.modules[r][6] = (r % 2 == 0);
+                    }
+                    for (var c = 8; c < this.moduleCount - 8; c++) {
+                        if (this.modules[6][c] !== null) continue;
+                        this.modules[6][c] = (c % 2 == 0);
+                    }
+                },
+                setupPositionAdjustPattern: function() {
+                    var pos = [
+                        [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34],
+                        [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50]
+                    ][this.typeNumber - 1] || [];
+                    for (var i = 0; i < pos.length; i++) {
+                        for (var j = 0; j < pos.length; j++) {
+                            var row = pos[i], col = pos[j];
+                            if (this.modules[row][col] !== null) continue;
+                            for (var r = -2; r <= 2; r++) {
+                                for (var c = -2; c <= 2; c++) {
+                                    if (r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0)) {
+                                        this.modules[row + r][col + c] = true;
+                                    } else {
+                                        this.modules[row + r][col + c] = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                setupTypeNumber: function(test) {},
+                setupTypeInfo: function(test, maskPattern) {
+                    var data = (this.errorCorrectLevel << 3) | maskPattern;
+                    var bits = 0;
+                    var d = data << 10;
+                    while (d >= (1 << 10)) {
+                        var shift = 0;
+                        while ((1 << (10 + shift)) <= d) shift++;
+                        shift--;
+                        d ^= (0x537 << shift);
+                    }
+                    bits = ((data << 10) | d) ^ 0x5412;
+                    for (var i = 0; i < 15; i++) {
+                        var mod = (!test && ((bits >> i) & 1) == 1);
+                        if (i < 6) this.modules[i][8] = mod;
+                        else if (i < 8) this.modules[i + 1][8] = mod;
+                        else this.modules[this.moduleCount - 15 + i][8] = mod;
+                        if (i < 8) this.modules[8][this.moduleCount - i - 1] = mod;
+                        else if (i < 9) this.modules[8][15 - i - 1 + 1] = mod;
+                        else this.modules[8][15 - i - 1] = mod;
+                    }
+                    this.modules[this.moduleCount - 8][8] = !test;
+                },
+                mapData: function(data, maskPattern) {
+                    var inc = -1, row = this.moduleCount - 1, bitIndex = 7, byteIndex = 0;
+                    for (var col = this.moduleCount - 1; col > 0; col -= 2) {
+                        if (col == 6) col--;
+                        while (true) {
+                            for (var c = 0; c < 2; c++) {
+                                if (this.modules[row][col - c] === null) {
+                                    var dark = false;
+                                    if (byteIndex < data.length) dark = (((data[byteIndex] >>> bitIndex) & 1) == 1);
+                                    var mask = ((row + (col - c)) % 2 == 0);
+                                    if (mask) dark = !dark;
+                                    this.modules[row][col - c] = dark;
+                                    bitIndex--;
+                                    if (bitIndex == -1) { bitIndex = 7; byteIndex++; }
+                                }
+                            }
+                            row += inc;
+                            if (row < 0 || this.moduleCount <= row) { row -= inc; inc = -inc; break; }
+                        }
+                    }
+                }
+            };
+
+            QRCodeModel.createData = function(typeNumber, errorCorrectLevel, dataList) {
+                var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+                var buffer = new QRBitBuffer();
+                for (var i = 0; i < dataList.length; i++) {
+                    var data = dataList[i];
+                    buffer.put(QRMode.MODE_8BIT_BYTE, 4);
+                    buffer.put(data.getLength(), 8);
+                    data.write(buffer);
+                }
+                var totalDataCount = 0;
+                for (var i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+                if (buffer.length + 4 <= totalDataCount * 8) buffer.put(0, 4);
+                while (buffer.length % 8 != 0) buffer.putBit(false);
+                while (true) {
+                    if (buffer.length >= totalDataCount * 8) break;
+                    buffer.put(0xEC, 8);
+                    if (buffer.length >= totalDataCount * 8) break;
+                    buffer.put(0x11, 8);
+                }
+                return QRCodeModel.createBytes(buffer, rsBlocks);
+            };
+
+            QRCodeModel.createBytes = function(buffer, rsBlocks) {
+                var offset = 0, maxDcCount = 0, maxEcCount = 0;
+                var dcdata = new Array(rsBlocks.length), ecdata = new Array(rsBlocks.length);
+                for (var r = 0; r < rsBlocks.length; r++) {
+                    var dcCount = rsBlocks[r].dataCount, ecCount = rsBlocks[r].totalCount - dcCount;
+                    maxDcCount = Math.max(maxDcCount, dcCount);
+                    maxEcCount = Math.max(maxEcCount, ecCount);
+                    dcdata[r] = new Array(dcCount);
+                    for (var i = 0; i < dcdata[r].length; i++) dcdata[r][i] = 0xFF & buffer.buffer[i + offset];
+                    offset += dcCount;
+                    var rsPoly = new QRPolynomial([1], 0);
+                    for (var i = 0; i < ecCount; i++) rsPoly = rsPoly.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0));
+                    var rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+                    var modPoly = rawPoly.mod(rsPoly);
+                    ecdata[r] = new Array(rsPoly.getLength() - 1);
+                    for (var i = 0; i < ecdata[r].length; i++) {
+                        var modIndex = i + modPoly.getLength() - ecdata[r].length;
+                        ecdata[r][i] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
+                    }
+                }
+                var totalCodeCount = 0;
+                for (var i = 0; i < rsBlocks.length; i++) totalCodeCount += rsBlocks[i].totalCount;
+                var data = new Array(totalCodeCount), index = 0;
+                for (var i = 0; i < maxDcCount; i++) {
+                    for (var r = 0; r < rsBlocks.length; r++) {
+                        if (i < dcdata[r].length) data[index++] = dcdata[r][i];
+                    }
+                }
+                for (var i = 0; i < maxEcCount; i++) {
+                    for (var r = 0; r < rsBlocks.length; r++) {
+                        if (i < ecdata[r].length) data[index++] = ecdata[r][i];
+                    }
+                }
+                return data;
+            };
+
+            return {
+                generateSVG: function(text, size) {
+                    size = size || 180;
+                    var qr = new QRCodeModel(0, QRErrorCorrectLevel.M);
+                    qr.addData(text);
+                    qr.make();
+                    var count = qr.getModuleCount();
+                    var cellSize = size / count;
+                    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">';
+                    svg += '<rect width="' + size + '" height="' + size + '" fill="#ffffff" rx="12"/>';
+                    for (var r = 0; r < count; r++) {
+                        for (var c = 0; c < count; c++) {
+                            if (qr.isDark(r, c)) {
+                                var x = (c * cellSize).toFixed(2);
+                                var y = (r * cellSize).toFixed(2);
+                                var w = (cellSize + 0.3).toFixed(2);
+                                var h = (cellSize + 0.3).toFixed(2);
+                                svg += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#0f172a"/>';
+                            }
+                        }
+                    }
+                    svg += '</svg>';
+                    return svg;
+                }
+            };
+        })();
+
+        // Score Formatting Helper
+        function formatScore(val) {
+            if (val < 0) return `-$${Math.abs(val)}`;
+            return `$${val}`;
+        }
+
+        // ================= EMBEDDED PURE JS SVG QR CODE GENERATOR =================
+        function renderReliableQRCode(url) {
+            const box = document.getElementById("qrcodeBox");
+            if (!box) return;
+            try {
+                // Instant pure client-side SVG generation (100% offline & zero network dependency)
+                box.innerHTML = QRCode.generateSVG(url, 180);
+            } catch (err) {
+                console.warn("SVG QR render fallback triggered:", err);
+                const encoded = encodeURIComponent(url);
+                box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encoded}&margin=2" alt="QR Code" class="w-[180px] h-[180px] rounded-xl mx-auto shadow-sm" onerror="this.onerror=null; this.src='https://quickchart.io/qr?text=${encoded}&size=180';">`;
+            }
+        }
+
+        // SageSure Handbook Q&A Database (Excluding Daily Missions & Workshop Scenarios)
+        const triviaQuestions = [
+            // Category 1: Workspace & Setup
+            {
+                id: "c1_1", catIdx: 0, catName: "Workspace & Setup", val: 100, isDailyDouble: false,
+                q: "Where in Workspace can adjusters view a permanent, system-logged history of claim milestones and notes that cannot be deleted?",
+                rawOptions: [
+                    { text: "The Timeline", correct: true },
+                    { text: "The Loss Summary", correct: false },
+                    { text: "The Claims List", correct: false },
+                    { text: "The Audit Report", correct: false }
+                ],
+                note: "Handbook p. 6 & 38: The Timeline provides a detailed log of claim history and essential milestones highlighted in blue."
+            },
+            {
+                id: "c1_2", catIdx: 0, catName: "Workspace & Setup", val: 200, isDailyDouble: false,
+                q: "What feature, formerly known as 'Desk Adjuster', uses peril-based scripts to guide adjusters through claim and estimate building in Workspace?",
+                rawOptions: [
+                    { text: "Questionnaires", correct: true },
+                    { text: "Assemblies", correct: false },
+                    { text: "Batches", correct: false },
+                    { text: "Quicklist", correct: false }
+                ],
+                note: "Handbook p. 39: Questionnaires (formerly Desk Adjuster) guide desk-settled claims with intelligent step-by-step scripts."
+            },
+            {
+                id: "c1_3", catIdx: 0, catName: "Workspace & Setup", val: 300, isDailyDouble: false,
+                q: "What status must a third-party vendor estimate be in to be included in the Claim Totals Page?",
+                rawOptions: [
+                    { text: "Approved", correct: true },
+                    { text: "Ready for Review", correct: false },
+                    { text: "Synchronized", correct: false },
+                    { text: "Completed", correct: false }
+                ],
+                note: "Handbook p. 36: Estimates from vendors must be in an Approved status to be available in the Claim Totals Page."
+            },
+
+            // Category 2: Diagramming 101
+            {
+                id: "c2_1", catIdx: 1, catName: "Diagramming 101", val: 100, isDailyDouble: false,
+                q: "When adjusting dimensions on a roof diagram, what is the recommended order of operations (PER)?",
+                rawOptions: [
+                    { text: "Pitch, Eave Length, Rafter Length", correct: true },
+                    { text: "Perimeter, Elevation, Ridge", correct: false },
+                    { text: "Pitch, Elevation, Roofplan", correct: false },
+                    { text: "Panel, Eave, Rafter", correct: false }
+                ],
+                note: "Handbook p. 27: The recommended order for setting roof dimensions is PER: Pitch, Eave Length, Rafter Length."
+            },
+            {
+                id: "c2_2", catIdx: 1, catName: "Diagramming 101", val: 200, isDailyDouble: false,
+                q: "Which mode is used to modify the shape/boundaries of a room, while Build Out Mode builds a new room from an adjacent wall?",
+                rawOptions: [
+                    { text: "Segment Mode", correct: true },
+                    { text: "Vertex Mode", correct: false },
+                    { text: "Freeform Mode", correct: false },
+                    { text: "Canvas Mode", correct: false }
+                ],
+                note: "Handbook p. 8: Segment Mode modifies the shape of a room; Build Out Mode creates a new room off an adjacent wall."
+            },
+            {
+                id: "c2_3", catIdx: 1, catName: "Diagramming 101", val: 300, isDailyDouble: false,
+                q: "When diagramming a multi-story structure, what feature allows you to view the first floor beneath the second floor to align stairs?",
+                rawOptions: [
+                    { text: "Superimpose", correct: true },
+                    { text: "AutoCreate 3D", correct: false },
+                    { text: "Wall Editor", correct: false },
+                    { text: "Background Blueprint", correct: false }
+                ],
+                note: "Handbook p. 18: Superimpose allows you to view underlying floorplans to align elements like stairwells."
+            },
+
+            // Category 3: Estimating & Editing
+            {
+                id: "c3_1", catIdx: 2, catName: "Estimating & Editing", val: 100, isDailyDouble: false,
+                q: "What tool calculates the estimated dumpster container size likely needed based on tear out and removal line items?",
+                rawOptions: [
+                    { text: "Debris Calculator", correct: true },
+                    { text: "Summary Tab", correct: false },
+                    { text: "Rollout Calculator", correct: false },
+                    { text: "Price Components", correct: false }
+                ],
+                note: "Handbook p. 25 & 37: The Debris Calculator calculates likely debris accumulation and recommends container sizes (e.g. 10/40 yd)."
+            },
+            {
+                id: "c3_2", catIdx: 2, catName: "Estimating & Editing", val: 200, isDailyDouble: true, // 🔥 DAILY DOUBLE!
+                q: "When reviewing or printing a Revision / Supplement in Estimate, which 3 views are available?",
+                rawOptions: [
+                    { text: "Separate, Combined, Merged", correct: true },
+                    { text: "Summary, Recap, Detail", correct: false },
+                    { text: "Structure, Contents, Exterior", correct: false },
+                    { text: "ACV, RCV, Depreciation", correct: false }
+                ],
+                note: "Handbook p. 35: Revision estimates offer 3 distinct review and printing views: Separate, Combined, and Merged."
+            },
+            {
+                id: "c3_3", catIdx: 2, catName: "Estimating & Editing", val: 300, isDailyDouble: false,
+                q: "In Estimate, what feature allows you to replace an existing line-item with a similar item or browse the database for an alternative?",
+                rawOptions: [
+                    { text: "Replace With", correct: true },
+                    { text: "Search & Replace", correct: false },
+                    { text: "Item Properties", correct: false },
+                    { text: "Assemblies", correct: false }
+                ],
+                note: "Handbook p. 15: Replace With allows you to replace an item with a similar item or browse the database to find a different item."
+            }
+        ];
+
+        // Global State
+        let isHost = true;
+        let peer = null;
+        let connections = [];
+        let roomCode = "";
+        let players = {};
+        let completedQuestions = [];
+        let currentQuestion = null;
+        let currentShuffledOptions = [];
+        let currentCorrectIndex = -1;
+        let questionVotes = [0, 0, 0, 0];
+        let timerInterval = null;
+        let timeLeft = 20;
+        let soundEnabled = true;
+
+        // Final Jeopardy Keywords
+        const finalAnswerKeywords = ["actual cash value", "acv", "actual cash", "cash value"];
+
+        // Audio Synthesizer
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, dur, vol = 0.1) {
+            if (!soundEnabled) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + dur);
+            } catch(e){}
+        }
+
+        function playDailyDoubleFanfare() {
+            if (!soundEnabled) return;
+            const notes = [300, 450, 600, 750, 900];
+            notes.forEach((n, i) => {
+                setTimeout(() => playTone(n, 'sawtooth', 0.2, 0.12), i * 110);
+            });
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            document.getElementById("audioToggleBtn").innerHTML = soundEnabled ? '<i class="fa-solid fa-volume-high"></i> Sound' : '<i class="fa-solid fa-volume-xmark"></i> Muted';
+        }
+
+        // Shuffle Function (Fisher-Yates)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Initialize Peer / Mode
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinCode = urlParams.get('room');
+
+            if (joinCode) {
+                isHost = false;
+                roomCode = joinCode.toUpperCase();
+                setupParticipantMode();
+            } else {
+                if (window.location.protocol === 'file:') {
+                    document.getElementById("localWarningBox").classList.remove('hidden');
+                }
+                setupHostMode();
+            }
+        });
+
+        // ================= HOST SETUP & PEER MANAGEMENT =================
+        function getBaseUrl() {
+            if (window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null') {
+                return window.location.href.split('?')[0];
+            }
+            return window.location.origin + window.location.pathname;
+        }
+
+        function openPlayerTab() {
+            const url = getBaseUrl() + "?room=" + roomCode;
+            window.open(url, '_blank', 'width=450,height=750');
+        }
+
+        function setupHostMode() {
+            roomCode = "SAGE" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById("roomCodeDisplay").innerText = roomCode;
+
+            const currentUrl = getBaseUrl() + "?room=" + roomCode;
+            document.getElementById("joinUrlText").innerText = currentUrl;
+
+            renderReliableQRCode(currentUrl);
+
+            initHostPeer(roomCode);
+            renderJeopardyBoard();
+        }
+
+        function initHostPeer(targetCode) {
+            try {
+                if (peer) peer.destroy();
+                peer = new Peer(targetCode, {
+                    debug: 1,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
+                });
+
+                peer.on('open', (id) => {
+                    console.log("Host Peer Room Connected:", id);
+                    document.getElementById("networkStatusDot").className = "inline-block w-2 h-2 rounded-full bg-emerald-400";
+                    document.getElementById("networkStatusText").innerText = "Ready • Code: " + id;
+                });
+
+                peer.on('connection', (conn) => {
+                    connections.push(conn);
+                    conn.on('data', (data) => handleHostIncomingData(conn, data));
+                    conn.on('close', () => {
+                        connections = connections.filter(c => c !== conn);
+                    });
+                });
+
+                peer.on('error', (err) => {
+                    console.warn("PeerJS Warning/Error:", err);
+                    if (err.type === 'unavailable-id') {
+                        const freshCode = "SAGE" + Math.floor(1000 + Math.random() * 9000);
+                        roomCode = freshCode;
+                        document.getElementById("roomCodeDisplay").innerText = roomCode;
+                        const newUrl = getBaseUrl() + "?room=" + roomCode;
+                        document.getElementById("joinUrlText").innerText = newUrl;
+                        renderReliableQRCode(newUrl);
+                        setTimeout(() => initHostPeer(freshCode), 300);
+                    }
+                });
+            } catch(e) {
+                console.error("PeerJS Init Exception:", e);
+            }
+        }
+
+        function applyCustomUrl() {
+            const val = document.getElementById("customUrlInput").value.trim();
+            if (val) {
+                const full = val.endsWith('/') ? val.slice(0, -1) : val;
+                const newJoin = full + "?room=" + roomCode;
+                document.getElementById("joinUrlText").innerText = newJoin;
+                renderReliableQRCode(newJoin);
+                alert("QR Code updated for: " + newJoin);
+            }
+        }
+
+        function copyJoinLink() {
+            const text = document.getElementById("joinUrlText").innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Link copied to clipboard!\n" + text);
+            }).catch(() => {
+                prompt("Copy your link manually:", text);
+            });
+        }
+
+        function handleHostIncomingData(conn, data) {
+            if (data.type === 'JOIN') {
+                players[conn.peer] = {
+                    id: conn.peer,
+                    name: data.name || "Player",
+                    avatar: data.avatar || "🛡️",
+                    score: 0,
+                    lastVote: null,
+                    voteTime: 0,
+                    finalWager: 0,
+                    finalTextAnswer: '',
+                    finalGradedCorrect: null
+                };
+                playTone(587.3, 'sine', 0.15, 0.08);
+                updatePlayerRoster();
+                conn.send({ type: 'JOIN_ACK', roomCode });
+            } else if (data.type === 'VOTE') {
+                if (currentQuestion && players[conn.peer]) {
+                    players[conn.peer].lastVote = data.optionIndex;
+                    players[conn.peer].voteTime = data.timeRemaining;
+                    questionVotes[data.optionIndex]++;
+                    updateHostLiveVoteDisplay();
+                    conn.send({ type: 'VOTE_RECEIVED' });
+                    playTone(440, 'triangle', 0.1, 0.05);
+                }
+            } else if (data.type === 'FINAL_WAGER') {
+                if (players[conn.peer]) {
+                    players[conn.peer].finalWager = Math.max(0, parseInt(data.wager) || 0);
+                    updateHostFinalWagersDisplay();
+                    conn.send({ type: 'FINAL_WAGER_ACK' });
+                    playTone(523.2, 'sine', 0.1, 0.05);
+                }
+            } else if (data.type === 'FINAL_TEXT_SUBMISSION') {
+                if (players[conn.peer]) {
+                    const text = data.text.trim();
+                    players[conn.peer].finalTextAnswer = text;
+                    
+                    // Auto-grade with flexible keyword match
+                    const lower = text.toLowerCase();
+                    const isCorrect = finalAnswerKeywords.some(k => lower.includes(k));
+                    players[conn.peer].finalGradedCorrect = isCorrect;
+
+                    updateHostFinalSubmissionsDisplay();
+                    conn.send({ type: 'FINAL_TEXT_ACK' });
+                    playTone(659.2, 'sine', 0.1, 0.05);
+                }
+            }
+        }
+
+        function broadcastToPlayers(msgObj) {
+            connections.forEach(conn => {
+                if (conn.open) conn.send(msgObj);
+            });
+        }
+
+        function updatePlayerRoster() {
+            const count = Object.keys(players).length;
+            document.getElementById("playerCountBadge").innerText = count;
+            document.getElementById("lobbyPlayerCount").innerText = count + " Joined";
+
+            const list = document.getElementById("lobbyPlayerList");
+            list.innerHTML = "";
+            Object.values(players).forEach(p => {
+                const badge = document.createElement("span");
+                badge.className = "px-2.5 py-1 rounded-lg bg-indigo-950/80 border border-indigo-700/60 text-xs font-bold text-slate-200 flex items-center gap-1.5 animate-fade-in";
+                badge.innerHTML = `${p.avatar} ${p.name}`;
+                list.appendChild(badge);
+            });
+        }
+
+        function addBotPlayers() {
+            const demo = [
+                { name: "Morgan T. (Desk Adj)", avatar: "🛡️" },
+                { name: "Alex R. (Field Adj)", avatar: "🎯" },
+                { name: "Taylor S. (Trainer)", avatar: "⚡" },
+                { name: "Jordan K. (Reviewer)", avatar: "🚀" }
+            ];
+            demo.forEach((d, i) => {
+                const fakeId = "bot_" + i;
+                players[fakeId] = {
+                    id: fakeId,
+                    name: d.name,
+                    avatar: d.avatar,
+                    score: Math.floor(100 + Math.random() * 300),
+                    lastVote: null,
+                    voteTime: 15,
+                    finalWager: 100,
+                    finalTextAnswer: i % 2 === 0 ? "What is Actual Cash Value (ACV)" : "Replacement Cost Value",
+                    finalGradedCorrect: i % 2 === 0
+                };
+            });
+            updatePlayerRoster();
+        }
+
+        // ================= BOARD RENDERER =================
+        function renderJeopardyBoard() {
+            for (let c = 0; c < 3; c++) {
+                const container = document.getElementById(`cat${c+1}Buttons`);
+                container.innerHTML = "";
+                const catQuestions = triviaQuestions.filter(q => q.catIdx === c);
+
+                catQuestions.forEach((q) => {
+                    const isDone = completedQuestions.includes(q.id);
+                    const btn = document.createElement("button");
+                    btn.className = `w-full py-3.5 rounded-xl font-black text-sm tracking-wide transition flex justify-between items-center px-4 ${
+                        isDone 
+                        ? 'bg-slate-900/60 text-slate-600 line-through cursor-not-allowed border border-slate-800' 
+                        : 'bg-indigo-950/70 hover:bg-indigo-900 text-amber-300 hover:text-white border border-indigo-800/80 shadow-md menti-btn'
+                    }`;
+                    btn.innerHTML = `<span>$${q.val}</span> <i class="fa-solid ${isDone ? 'fa-check' : 'fa-play text-xs opacity-60'}"></i>`;
+                    if (!isDone) {
+                        btn.onclick = () => launchHostQuestion(q);
+                    }
+                    container.appendChild(btn);
+                });
+            }
+            document.getElementById("remainingCluesCount").innerText = `${9 - completedQuestions.length}/9`;
+        }
+
+        // ================= QUESTION FLOW =================
+        function launchHostQuestion(questionObj) {
+            currentQuestion = questionObj;
+            questionVotes = [0, 0, 0, 0];
+            Object.values(players).forEach(p => p.lastVote = null);
+
+            const shuffled = shuffleArray(questionObj.rawOptions);
+            currentShuffledOptions = shuffled.map(o => o.text);
+            currentCorrectIndex = shuffled.findIndex(o => o.correct === true);
+
+            switchView('question');
+
+            const ddBanner = document.getElementById("hostDailyDoubleBanner");
+            const ptMultiplier = questionObj.isDailyDouble ? 2 : 1;
+            const effectivePoints = questionObj.val * ptMultiplier;
+
+            if (questionObj.isDailyDouble) {
+                ddBanner.classList.remove('hidden');
+                playDailyDoubleFanfare();
+                confetti({ particleCount: 80, spread: 80, origin: { y: 0.3 } });
+            } else {
+                ddBanner.classList.add('hidden');
+            }
+
+            document.getElementById("hostCatBadge").innerText = questionObj.catName;
+            document.getElementById("hostPointBadge").innerText = questionObj.isDailyDouble 
+                ? `🔥 DAILY DOUBLE: $${effectivePoints} Points` 
+                : `$${questionObj.val} Points`;
+            document.getElementById("hostQuestionText").innerText = questionObj.q;
+
+            const optContainer = document.getElementById("hostOptionsContainer");
+            optContainer.innerHTML = "";
+            const colorThemes = [
+                { bg: 'bg-indigo-600', icon: '▲' },
+                { bg: 'bg-amber-600', icon: '◆' },
+                { bg: 'bg-teal-600', icon: '●' },
+                { bg: 'bg-rose-600', icon: '■' }
+            ];
+
+            currentShuffledOptions.forEach((opt, idx) => {
+                const theme = colorThemes[idx];
+                const card = document.createElement("div");
+                card.id = `hostOptCard_${idx}`;
+                card.className = "glass-card p-4 rounded-2xl border border-white/10 relative overflow-hidden flex flex-col justify-between";
+                card.innerHTML = `
+                    <div class="flex items-center gap-2 mb-2 z-10">
+                        <span class="w-7 h-7 rounded-lg ${theme.bg} text-white flex items-center justify-center font-black text-xs">${theme.icon}</span>
+                        <span class="text-sm font-bold text-white">${opt}</span>
+                    </div>
+                    <div class="w-full bg-slate-900/80 h-3 rounded-full overflow-hidden mt-2 z-10">
+                        <div id="voteBar_${idx}" class="h-full ${theme.bg} bar-transition" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-400 mt-1 z-10">
+                        <span id="votePercent_${idx}">0%</span>
+                        <span id="voteCount_${idx}" class="text-slate-300">0 votes</span>
+                    </div>
+                `;
+                optContainer.appendChild(card);
+            });
+
+            broadcastToPlayers({
+                type: 'QUESTION_START',
+                q: questionObj.q,
+                options: currentShuffledOptions,
+                val: effectivePoints,
+                isDailyDouble: questionObj.isDailyDouble,
+                time: 20
+            });
+
+            document.getElementById("btnRevealAnswer").classList.remove('hidden');
+            document.getElementById("btnShowLeaderboard").classList.add('hidden');
+            startHostTimer(20);
+        }
+
+        function startHostTimer(seconds) {
+            if (timerInterval) clearInterval(timerInterval);
+            timeLeft = seconds;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    playTone(220, 'sawtooth', 0.4, 0.1);
+                    revealAnswer();
+                } else if (timeLeft <= 5) {
+                    playTone(440, 'sine', 0.05, 0.05);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById("hostTimerSecs").innerText = timeLeft;
+            const pct = (timeLeft / 20) * 100;
+            document.getElementById("hostTimerBar").style.width = pct + "%";
+        }
+
+        function updateHostLiveVoteDisplay() {
+            const totalVotes = questionVotes.reduce((a, b) => a + b, 0);
+
+            document.getElementById("hostLiveVotesCount").innerText = totalVotes;
+            document.getElementById("hostTotalVotersCount").innerText = Object.keys(players).length;
+
+            questionVotes.forEach((votes, idx) => {
+                const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                const bar = document.getElementById(`voteBar_${idx}`);
+                const countLbl = document.getElementById(`voteCount_${idx}`);
+                const pctLbl = document.getElementById(`votePercent_${idx}`);
+
+                if (bar) bar.style.width = pct + "%";
+                if (countLbl) countLbl.innerText = `${votes} votes`;
+                if (pctLbl) pctLbl.innerText = `${pct}%`;
+            });
+        }
+
+        function revealAnswer() {
+            if (timerInterval) clearInterval(timerInterval);
+            if (!currentQuestion) return;
+
+            const correctIdx = currentCorrectIndex;
+            const ptMultiplier = currentQuestion.isDailyDouble ? 2 : 1;
+            const effectivePoints = currentQuestion.val * ptMultiplier;
+
+            for (let i = 0; i < 4; i++) {
+                const card = document.getElementById(`hostOptCard_${i}`);
+                if (i === correctIdx) {
+                    card.classList.add('border-emerald-400', 'bg-emerald-950/40', 'ring-2', 'ring-emerald-400');
+                } else {
+                    card.classList.add('opacity-40');
+                }
+            }
+
+            Object.values(players).forEach(p => {
+                if (p.id.startsWith('bot_') && p.lastVote === null) {
+                    p.lastVote = Math.random() > 0.3 ? correctIdx : Math.floor(Math.random() * 4);
+                    p.voteTime = Math.floor(5 + Math.random() * 12);
+                }
+
+                if (p.lastVote === correctIdx) {
+                    const speedBonus = Math.round((p.voteTime / 20) * (effectivePoints * 0.5));
+                    p.score += (effectivePoints + speedBonus);
+                } else if (p.lastVote !== null && p.lastVote !== undefined) {
+                    // Deduct points for incorrect answers
+                    p.score -= effectivePoints;
+                }
+            });
+
+            if (!completedQuestions.includes(currentQuestion.id)) {
+                completedQuestions.push(currentQuestion.id);
+            }
+            renderJeopardyBoard();
+
+            playTone(523.2, 'triangle', 0.15, 0.1);
+            setTimeout(() => playTone(659.2, 'triangle', 0.15, 0.1), 100);
+            setTimeout(() => playTone(783.9, 'triangle', 0.3, 0.1), 200);
+
+            confetti({ particleCount: currentQuestion.isDailyDouble ? 120 : 50, spread: 70, origin: { y: 0.6 } });
+
+            broadcastToPlayers({
+                type: 'QUESTION_RESULT',
+                correctIndex: correctIdx,
+                correctText: currentShuffledOptions[correctIdx],
+                note: currentQuestion.note
+            });
+
+            Object.values(players).forEach(p => {
+                const pConn = connections.find(c => c.peer === p.id);
+                if (pConn && pConn.open) {
+                    pConn.send({ type: 'SCORE_SYNC', score: p.score });
+                }
+            });
+
+            document.getElementById("btnRevealAnswer").classList.add('hidden');
+            document.getElementById("btnShowLeaderboard").classList.remove('hidden');
+        }
+
+        // ================= LEADERBOARD =================
+        function showLeaderboard() {
+            switchView('leaderboard');
+            const list = document.getElementById("leaderboardList");
+            list.innerHTML = "";
+
+            const sorted = Object.values(players).sort((a, b) => b.score - a.score);
+            sorted.forEach((p, rank) => {
+                const item = document.createElement("div");
+                item.className = `flex justify-between items-center p-3.5 rounded-2xl ${
+                    rank === 0 ? 'bg-amber-950/70 border border-amber-500/50 shadow-lg' : 'bg-slate-900/60 border border-white/5'
+                }`;
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-xl ${rank === 0 ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'} flex items-center justify-center font-black text-sm">
+                            ${rank + 1}
+                        </span>
+                        <span class="text-xl">${p.avatar}</span>
+                        <span class="font-extrabold text-sm text-white">${p.name}</span>
+                    </div>
+                    <span class="font-mono font-black text-emerald-400 text-lg">${formatScore(p.score)}</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // ================= FINAL JEOPARDY HOST WORKFLOW =================
+        function startFinalJeopardy() {
+            switchView('final');
+            document.getElementById("finalJeopardyStage1").classList.remove('hidden');
+            document.getElementById("finalJeopardyStage2").classList.add('hidden');
+            document.getElementById("finalJeopardyStage3").classList.add('hidden');
+
+            updateHostFinalWagersDisplay();
+
+            Object.values(players).forEach(p => {
+                const max = Math.max(p.score, 500);
+                const pConn = connections.find(c => c.peer === p.id);
+                if (pConn && pConn.open) {
+                    pConn.send({ type: 'START_FINAL_WAGER', maxWager: max });
+                }
+            });
+        }
+
+        function updateHostFinalWagersDisplay() {
+            const container = document.getElementById("hostWagerRoster");
+            container.innerHTML = "";
+            const playerArr = Object.values(players);
+            if (playerArr.length === 0) {
+                container.innerHTML = '<span class="text-xs text-slate-500 italic">No players connected yet.</span>';
+                return;
+            }
+            playerArr.forEach(p => {
+                const isLocked = p.finalWager > 0 || p.id.startsWith('bot_');
+                const chip = document.createElement("span");
+                chip.className = `px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 ${
+                    isLocked ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400'
+                }`;
+                chip.innerHTML = `${p.avatar} ${p.name}: <strong>$${p.finalWager}</strong> ${isLocked ? '🔒' : '⏳'}`;
+                container.appendChild(chip);
+            });
+        }
+
+        function revealFinalClue() {
+            document.getElementById("finalJeopardyStage1").classList.add('hidden');
+            document.getElementById("finalJeopardyStage2").classList.remove('hidden');
+
+            broadcastToPlayers({
+                type: 'FINAL_CLUE_START',
+                time: 30
+            });
+
+            updateHostFinalSubmissionsDisplay();
+
+            let fSecs = 30;
+            const bar = document.getElementById("finalTimerBar");
+            const lbl = document.getElementById("finalTimerDisplay");
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                fSecs--;
+                lbl.innerText = fSecs + "s";
+                bar.style.width = (fSecs / 30 * 100) + "%";
+                playTone(350, 'triangle', 0.04, 0.03);
+
+                if (fSecs <= 0) {
+                    clearInterval(timerInterval);
+                    lbl.innerText = "TIME IS UP!";
+                }
+            }, 1000);
+        }
+
+        function updateHostFinalSubmissionsDisplay() {
+            const container = document.getElementById("finalHostSubmissionsList");
+            container.innerHTML = "";
+            const playerArr = Object.values(players);
+            const submittedCount = playerArr.filter(p => p.finalTextAnswer !== '').length;
+            document.getElementById("finalSubmissionsCount").innerText = `${submittedCount}/${playerArr.length} Submitted`;
+
+            playerArr.forEach((p, idx) => {
+                const row = document.createElement("div");
+                row.className = "flex justify-between items-center p-2.5 rounded-xl bg-slate-900 border border-white/5";
+                const isSub = p.finalTextAnswer !== '';
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span>${p.avatar}</span>
+                        <span class="text-xs font-extrabold text-white">${p.name}</span>
+                        <span class="text-xs text-amber-300 italic">"${isSub ? p.finalTextAnswer : 'Typing...'}"</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono text-slate-400">Wager: $${p.finalWager}</span>
+                        ${isSub ? `
+                            <button onclick="toggleGradeOverride('${p.id}')" class="px-2.5 py-1 rounded-lg text-xs font-black ${
+                                p.finalGradedCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+                            }">
+                                ${p.finalGradedCorrect ? '✓ Correct' : '✕ Wrong'}
+                            </button>
+                        ` : '<span class="text-xs text-slate-500">⏳</span>'}
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function toggleGradeOverride(playerId) {
+            if (players[playerId]) {
+                players[playerId].finalGradedCorrect = !players[playerId].finalGradedCorrect;
+                updateHostFinalSubmissionsDisplay();
+                playTone(players[playerId].finalGradedCorrect ? 600 : 250, 'triangle', 0.1, 0.08);
+            }
+        }
+
+        function concludeGame() {
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById("finalJeopardyStage2").classList.add('hidden');
+            document.getElementById("finalJeopardyStage3").classList.remove('hidden');
+
+            Object.values(players).forEach(p => {
+                const w = p.finalWager || 0;
+                if (p.finalGradedCorrect) {
+                    p.score += w;
+                } else {
+                    p.score = Math.max(0, p.score - w);
+                }
+
+                const pConn = connections.find(c => c.peer === p.id);
+                if (pConn && pConn.open) {
+                    pConn.send({
+                        type: 'FINAL_INDIVIDUAL_RESULT',
+                        isCorrect: p.finalGradedCorrect,
+                        wager: w,
+                        finalScore: p.score,
+                        submittedText: p.finalTextAnswer,
+                        officialAnswer: "What is Actual Cash Value (ACV)?"
+                    });
+                }
+            });
+
+            const sorted = Object.values(players).sort((a, b) => b.score - a.score);
+            const champion = sorted[0] || { name: "SageSure Ace", avatar: "🏆", score: 1000 };
+
+            document.getElementById("winnerBanner").innerHTML = `
+                <div class="text-amber-400 text-3xl font-black mb-1">${champion.avatar} ${champion.name}</div>
+                <div class="text-emerald-400 text-2xl font-mono">${formatScore(champion.score)} Final Total</div>
+            `;
+
+            const roster = document.getElementById("finalGradingRoster");
+            roster.innerHTML = "";
+            sorted.forEach((p, idx) => {
+                const item = document.createElement("div");
+                item.className = "flex justify-between items-center p-2 rounded-xl bg-slate-900 text-xs";
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="font-black text-slate-400">#${idx+1}</span>
+                        <span>${p.avatar} ${p.name}</span>
+                        <span class="${p.finalGradedCorrect ? 'text-emerald-400 font-bold' : 'text-rose-400'}">(${p.finalGradedCorrect ? '+' : '-'}$${p.finalWager})</span>
+                    </div>
+                    <span class="font-mono font-black text-emerald-400 text-sm">${formatScore(p.score)}</span>
+                `;
+                roster.appendChild(item);
+            });
+
+            playTone(523.2, 'triangle', 0.2, 0.15);
+            setTimeout(() => playTone(659.2, 'triangle', 0.2, 0.15), 150);
+            setTimeout(() => playTone(783.9, 'triangle', 0.4, 0.15), 300);
+
+            confetti({ particleCount: 150, spread: 100, origin: { y: 0.4 } });
+        }
+
+        // ================= PARTICIPANT CLIENT LOGIC (MOBILE) =================
+        let clientPeer = null;
+        let hostConnection = null;
+        let myPlayerData = { name: '', avatar: '🛡️', score: 0 };
+        let myMaxWager = 500;
+
+        function setupParticipantMode() {
+            document.getElementById("hostHeaderStats").classList.add('hidden');
+            if (roomCode) {
+                document.getElementById("participantRoomInput").value = roomCode;
+            }
+            switchView('participant');
+        }
+
+        function joinGameAsParticipant() {
+            const targetRoom = (document.getElementById("participantRoomInput").value.trim() || roomCode).toUpperCase();
+            const name = document.getElementById("participantNameInput").value.trim() || "Player " + Math.floor(Math.random() * 100);
+            const avatar = document.getElementById("participantAvatarSelect").value;
+            
+            if (!targetRoom) {
+                alert("Please enter the Room Code shown on the presenter screen.");
+                return;
+            }
+
+            myPlayerData.name = name;
+            myPlayerData.avatar = avatar;
+
+            document.getElementById("playerNameBadge").innerText = name;
+            document.getElementById("playerAvatarBadge").innerText = avatar;
+
+            clientPeer = new Peer({
+                debug: 1,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:global.stun.twilio.com:3478' }
+                    ]
+                }
+            });
+
+            clientPeer.on('open', (id) => {
+                console.log("Client Peer Open:", id);
+                hostConnection = clientPeer.connect(targetRoom, { reliable: true });
+
+                hostConnection.on('open', () => {
+                    console.log("Connected to Host:", targetRoom);
+                    hostConnection.send({ type: 'JOIN', name, avatar });
+                    document.getElementById("mobileJoinCard").classList.add('hidden');
+                    document.getElementById("mobilePlayScreen").classList.remove('hidden');
+                });
+
+                hostConnection.on('data', (data) => handleParticipantIncomingData(data));
+
+                hostConnection.on('error', (err) => {
+                    console.error("Connection Error:", err);
+                    alert("Could not connect to room " + targetRoom + ". Please verify the code on the screen.");
+                });
+            });
+
+            clientPeer.on('error', (err) => {
+                console.error("Client PeerJS Error:", err);
+            });
+        }
+
+        function handleParticipantIncomingData(data) {
+            if (data.type === 'QUESTION_START') {
+                hideAllParticipantBoxes();
+                document.getElementById("playerButtonsGrid").classList.remove('hidden');
+
+                const mDdBanner = document.getElementById("mobileDailyDoubleBanner");
+                if (data.isDailyDouble) {
+                    mDdBanner.classList.remove('hidden');
+                } else {
+                    mDdBanner.classList.add('hidden');
+                }
+
+                for (let i = 0; i < 4; i++) {
+                    document.getElementById(`btnLabel${i}`).innerText = data.options[i];
+                }
+            } else if (data.type === 'QUESTION_RESULT') {
+                hideAllParticipantBoxes();
+                document.getElementById("playerFeedbackBox").classList.remove('hidden');
+                document.getElementById("feedbackIcon").innerText = "💡";
+                document.getElementById("feedbackTitle").innerText = `Correct: ${data.correctText}`;
+                document.getElementById("feedbackDesc").innerText = data.note;
+            } else if (data.type === 'SCORE_SYNC') {
+                myPlayerData.score = data.score;
+                document.getElementById("playerScoreBadge").innerText = formatScore(data.score);
+            } else if (data.type === 'START_FINAL_WAGER') {
+                hideAllParticipantBoxes();
+                myMaxWager = data.maxWager;
+                document.getElementById("playerMaxWagerText").innerText = `$${myMaxWager}`;
+                document.getElementById("playerWagerInput").max = myMaxWager;
+                document.getElementById("playerFinalWagerBox").classList.remove('hidden');
+            } else if (data.type === 'FINAL_CLUE_START') {
+                hideAllParticipantBoxes();
+                document.getElementById("playerFinalAnswerBox").classList.remove('hidden');
+            } else if (data.type === 'FINAL_INDIVIDUAL_RESULT') {
+                hideAllParticipantBoxes();
+                const resCard = document.getElementById("playerFinalResultCard");
+                resCard.classList.remove('hidden');
+
+                document.getElementById("finalResultIcon").innerText = data.isCorrect ? "🎉" : "❌";
+                document.getElementById("finalResultTitle").innerText = data.isCorrect ? "YOU GOT IT RIGHT!" : "INCORRECT!";
+                document.getElementById("finalResultTitle").className = data.isCorrect ? "text-2xl font-black text-emerald-400 mb-1" : "text-2xl font-black text-rose-400 mb-1";
+                
+                document.getElementById("finalResultSubtitle").innerHTML = `
+                    Your Answer: <strong>"${data.submittedText}"</strong><br>
+                    Correct Answer: <strong>${data.officialAnswer}</strong><br>
+                    Wager: <strong>${data.isCorrect ? '+' : '-'}$${data.wager}</strong>
+                `;
+                document.getElementById("finalPlayerScoreTally").innerText = formatScore(data.finalScore);
+
+                if (data.isCorrect) {
+                    confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                }
+            }
+        }
+
+        function hideAllParticipantBoxes() {
+            document.getElementById("playerWaitingBox").classList.add('hidden');
+            document.getElementById("playerButtonsGrid").classList.add('hidden');
+            document.getElementById("playerFinalWagerBox").classList.add('hidden');
+            document.getElementById("playerFinalAnswerBox").classList.add('hidden');
+            document.getElementById("playerFinalResultCard").classList.add('hidden');
+            document.getElementById("playerFeedbackBox").classList.add('hidden');
+            document.getElementById("mobileDailyDoubleBanner").classList.add('hidden');
+        }
+
+        function submitVote(optionIndex) {
+            if (hostConnection && hostConnection.open) {
+                hostConnection.send({
+                    type: 'VOTE',
+                    optionIndex: optionIndex,
+                    timeRemaining: 15
+                });
+            }
+            hideAllParticipantBoxes();
+            document.getElementById("playerFeedbackBox").classList.remove('hidden');
+            document.getElementById("feedbackIcon").innerText = "✓";
+            document.getElementById("feedbackTitle").innerText = "Answer Locked!";
+            document.getElementById("feedbackDesc").innerText = "Watch the presenter screen for live results.";
+        }
+
+        function submitFinalWager() {
+            let val = parseInt(document.getElementById("playerWagerInput").value) || 0;
+            if (val < 0) val = 0;
+            if (val > myMaxWager) val = myMaxWager;
+
+            if (hostConnection && hostConnection.open) {
+                hostConnection.send({
+                    type: 'FINAL_WAGER',
+                    wager: val
+                });
+            }
+
+            hideAllParticipantBoxes();
+            document.getElementById("playerFeedbackBox").classList.remove('hidden');
+            document.getElementById("feedbackIcon").innerText = "🔒";
+            document.getElementById("feedbackTitle").innerText = `Wager Locked: $${val}`;
+            document.getElementById("feedbackDesc").innerText = "Get ready to type your answer when the clue is revealed!";
+        }
+
+        function submitFinalTextAnswer() {
+            const txt = document.getElementById("playerFinalTextInput").value.trim();
+            if (hostConnection && hostConnection.open) {
+                hostConnection.send({
+                    type: 'FINAL_TEXT_SUBMISSION',
+                    text: txt
+                });
+            }
+
+            hideAllParticipantBoxes();
+            document.getElementById("playerFeedbackBox").classList.remove('hidden');
+            document.getElementById("feedbackIcon").innerText = "📝";
+            document.getElementById("feedbackTitle").innerText = "Final Answer Sent!";
+            document.getElementById("feedbackDesc").innerText = `"${txt}" is locked in. Stand by for the grand reveal!`;
+        }
+
+        // ================= GENERAL NAVIGATION =================
+        function switchView(viewName) {
+            const views = ['viewLobby', 'viewBoard', 'viewHostQuestion', 'viewLeaderboard', 'viewFinal', 'viewParticipant'];
+            views.forEach(v => document.getElementById(v).classList.add('hidden'));
+
+            if (viewName === 'join' || viewName === 'lobby') document.getElementById('viewLobby').classList.remove('hidden');
+            else if (viewName === 'board') document.getElementById('viewBoard').classList.remove('hidden');
+            else if (viewName === 'question') document.getElementById('viewHostQuestion').classList.remove('hidden');
+            else if (viewName === 'leaderboard') document.getElementById('viewLeaderboard').classList.remove('hidden');
+            else if (viewName === 'final') document.getElementById('viewFinal').classList.remove('hidden');
+            else if (viewName === 'participant') document.getElementById('viewParticipant').classList.remove('hidden');
+        }
+
+        function startGame() {
+            switchView('board');
+        }
+
+        function resetWholeGame() {
+            completedQuestions = [];
+            switchView('lobby');
+            renderJeopardyBoard();
+        }
+    </script>
+</body>
+</html>
